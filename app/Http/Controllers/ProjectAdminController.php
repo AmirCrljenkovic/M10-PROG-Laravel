@@ -12,8 +12,8 @@ class ProjectAdminController extends Controller
      */
     public function index()
     {
-        $projecten = Project::paginate(100);
-return view('dashboard.projecten.index', ['projecten'=>$projecten]);
+        $projects = Project::paginate(5);
+        return view('dashboard.projects.index', ['projecten' => $projects]);
     }
 
     /**
@@ -21,80 +21,64 @@ return view('dashboard.projecten.index', ['projecten'=>$projecten]);
      */
     public function create()
     {
-        return view('dashboard.projecten.create', ['projecten'=> new Project()]);
+        $project = new Project();
+        return view('dashboard.projects.create', ['project' => $project]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        $valid = $request->validate([
-            'titel'      => 'required|max:255',
-            'header'      => 'required|max:255',
-            'link'        => '',
-            'img'         => '',
-            'alt'       => '',
-            'video'       => '',
-            'description'      => 'required|max:255',
 
-        ]);
+       $data = $this->validateProject($request);
+    
+        $project = new Project($data);
+        $project->save();
 
-        $projecten = new Project( $valid );
-        $projecten->save();
-
-        return redirect( route('projecten.index', $projecten->id ) );
-
-
+        return redirect()->route('project.index');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Project $project)
+    public function edit(Project $project)
+    {
+        return view('dashboard.projects.edit', ['project' => $project]);
+    }
+
+
+
+    public function update(Request $request, Project $project)
     {
         
+        $data = $this->validateProject($request);
+
+        $project->update($data);
+        $project->save();
+
+        return redirect()->route('project.index');
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Project $projecten)
+
+
+
+    public function destroy(Project $project)
     {
-        return view('dashboard.projecten.edit', ['project'=>$projecten]);
+        $project->delete();
+
+        return redirect()->route('project.index');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Project $projecten)
-    {
-        $valid = $request->validate([
-            'titel'      => 'required|max:255',
-            'header'      => 'required|max:255',
-            'link'        => '',
-            'img'         => '',
-            'alt'       => '',
-            'video'       => '',
-            'description'      => 'required|max:255',
 
+    protected function validateProject(Request $request){
+
+        $data = $request->validate([
+            'titel' => 'required|min:3',
+            'description' => 'required',
+            'published' => '',
         ]);
 
-        $projecten->update($valid);
-        $projecten->save();
+   
+        $data['published'] = false;
+        if(isset($data['published'])){
+            $data['published'] = true;
+        }
 
-        return redirect( route('projecten.index', $projecten->id ) );
-
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Project $projecten)
-    {
-        $projecten->delete();
-        return redirect(route('projecten.index'))->with('alert', 'Het item '.$projecten->title.' is nu weg.');
-
-        
+        return $data;
     }
 }

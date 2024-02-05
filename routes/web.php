@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Controllers\AboutController;
+use App\Http\Controllers\ContactController;
+use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\ProjectAdminController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,7 +20,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
-});
+})->name('homepage');
 
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -29,3 +33,31 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+// Nieuwe routes voor ProjectAdminController
+Route::prefix('/dashboard')->group(function () {
+    Route::get('/', function () {
+        return view('dashboard');
+    })->middleware(['auth', 'verified'])->name('dashboard');
+
+    Route::middleware('auth')->group(function () {
+        Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    });
+
+    
+    Route::resources([
+        'project' => ProjectAdminController::class,
+    ]);
+    
+    
+});
+
+
+Route::get('/project', [ProjectController::class, 'index']) ->name('projects.projecten');
+Route::get('/projects/add', [ ProjectController::class, 'add' ])->name('projects.add');
+Route::get('/over', [AboutController::class, 'about']) ->name('about.me');
+Route::get('/contact', [ContactController::class, 'contactForm']) ->name('contact.form');
+
+Route::get('/project/{project}', [ProjectController::class, 'show'])->name('project.show');
